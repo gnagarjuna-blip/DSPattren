@@ -3,264 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Double Street Pattern Pro</title>
+    <title>DS Unique Pattern Tracker</title>
     <style>
         :root {
-            --bg: #0b0e14;
+            --bg: #0d1117;
             --card: #161b22;
-            --primary: #4cc9f0;
-            --secondary: #7209b7;
-            --accent: #72efdd;
-            --danger: #f72585;
-            --text: #e0e1dd;
+            --primary: #58a6ff;
+            --accent: #7ee787;
+            --warning: #d29922;
+            --danger: #f85149;
+            --text: #c9d1d9;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-        }
-        
-        body {
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            padding: 15px;
-        }
-        
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        h1 {
-            font-size: 1.8rem;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(76, 201, 240, 0.3);
-        }
-        
-        /* --- Prediction Engine --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 15px; }
+        .container { max-width: 500px; margin: 0 auto; }
+
+        header { text-align: center; margin-bottom: 20px; }
+        h1 { color: var(--primary); font-size: 1.5rem; letter-spacing: 1px; }
+
+        /* Prediction Area */
         .engine-card {
             background: var(--card);
             border: 1px solid #30363d;
-            border-radius: 16px;
+            border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
             text-align: center;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
         }
 
-        .status-badge {
+        .status-pill {
             display: inline-block;
-            padding: 4px 12px;
-            border-radius: 50px;
-            font-size: 0.75rem;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.7rem;
             font-weight: bold;
+            text-transform: uppercase;
+            background: #21262d;
+            border: 1px solid #30363d;
             margin-bottom: 15px;
-            background: rgba(255,255,255,0.05);
-            color: #8d99ae;
-            border: 1px solid transparent;
         }
 
-        .status-badge.active {
-            background: rgba(114, 239, 221, 0.1);
+        .status-pill.match {
             color: var(--accent);
             border-color: var(--accent);
-            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px rgba(126, 231, 135, 0.2);
         }
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 1; }
-        }
-
-        .prediction-grid {
+        .prediction-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin: 15px 0;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
         .pred-box {
-            background: linear-gradient(145deg, #1b263b, #0d1b2a);
-            border: 1px solid #4361ee;
-            border-radius: 12px;
+            background: #0d1117;
+            border: 2px solid #30363d;
+            border-radius: 10px;
             padding: 15px 5px;
-            transition: all 0.3s ease;
         }
 
-        .pred-box.empty {
-            border: 1px dashed #30363d;
-            background: transparent;
-            opacity: 0.5;
-        }
+        .pred-box.active { border-color: var(--primary); background: rgba(88, 166, 255, 0.05); }
 
-        .pred-box .val {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: white;
-            display: block;
-        }
+        .pred-box .val { font-size: 2rem; font-weight: 800; color: white; display: block; }
+        .pred-box .label { font-size: 0.6rem; color: #8b949e; text-transform: uppercase; }
 
-        .pred-box .label {
-            font-size: 0.65rem;
-            color: var(--primary);
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-
-        .current-seq {
-            font-size: 0.85rem;
-            color: #8d99ae;
-            background: rgba(0,0,0,0.2);
-            padding: 10px;
-            border-radius: 8px;
-            display: inline-block;
-            margin-top: 10px;
-        }
-
-        /* --- Controls --- */
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .bulk-input {
-            flex: 1;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #30363d;
-            background: var(--card);
-            color: white;
-        }
-        
-        .btn {
-            padding: 12px 18px;
-            border-radius: 8px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        
-        .btn-load { background: var(--primary); color: #000; }
-        .btn-clear { background: var(--danger); color: white; }
-        
-        .number-pad {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 6px;
-            background: var(--card);
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-        
-        .num-btn {
-            aspect-ratio: 1;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 6px;
-            border: 1px solid #30363d;
-            background: #1c2128;
-            color: white;
-            cursor: pointer;
-        }
-        
-        .num-btn.zero { background: #238636; border-color: #2ea043; }
-        .num-btn:active { background: var(--primary); color: #000; }
-
-        .history-tray {
-            background: var(--card);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid #30363d;
-        }
-
-        .history-title {
-            font-size: 0.75rem;
-            color: #8d99ae;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .history-items {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .h-tag {
-            background: #30363d;
-            padding: 4px 8px;
-            border-radius: 4px;
+        .sequence-info {
             font-size: 0.8rem;
-            font-weight: bold;
+            color: #8b949e;
+            padding-top: 10px;
+            border-top: 1px solid #30363d;
         }
 
-        .ds-info {
-            margin-top: 15px;
-            font-size: 0.7rem;
-            color: #484f58;
-            text-align: center;
+        /* Controls */
+        .input-group { display: flex; gap: 8px; margin-bottom: 15px; }
+        .bulk-input { 
+            flex: 1; background: #0d1117; border: 1px solid #30363d; 
+            border-radius: 6px; padding: 10px; color: white; 
         }
+        
+        .btn { padding: 10px 15px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-load { background: var(--primary); color: #0d1117; }
+        .btn-clr { background: var(--danger); color: white; }
+
+        .numpad {
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+            background: var(--card); padding: 10px; border-radius: 12px;
+        }
+        .num-btn {
+            aspect-ratio: 1; background: #21262d; border: 1px solid #30363d;
+            color: white; font-weight: bold; border-radius: 4px; cursor: pointer;
+        }
+        .num-btn.zero { background: #238636; }
+        .num-btn:active { background: var(--primary); }
+
+        .history-list {
+            margin-top: 15px; display: flex; flex-wrap: wrap; gap: 5px;
+            max-height: 80px; overflow-y: auto;
+        }
+        .h-item { background: #30363d; padding: 2px 8px; border-radius: 3px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>DS Pattern Pro</h1>
-        </header>
+        <header><h1>DS SEQUENCE FINDER</h1></header>
 
         <div class="engine-card">
-            <div id="status" class="status-badge">Waiting for 3 numbers...</div>
+            <div id="status" class="status-pill">Awaiting 3+ Spins</div>
             
-            <div class="prediction-grid">
-                <div class="pred-box empty" id="b1">
-                    <span class="label">Next DS</span>
-                    <span class="val" id="v1">-</span>
-                </div>
-                <div class="pred-box empty" id="b2">
-                    <span class="label">Follow DS</span>
-                    <span class="val" id="v2">-</span>
-                </div>
-                <div class="pred-box empty" id="b3">
-                    <span class="label">Third DS</span>
-                    <span class="val" id="v3">-</span>
-                </div>
+            <div class="prediction-row">
+                <div class="pred-box" id="p1"><span class="label">DS 1</span><span class="val">-</span></div>
+                <div class="pred-box" id="p2"><span class="label">DS 2</span><span class="val">-</span></div>
+                <div class="pred-box" id="p3"><span class="label">DS 3</span><span class="val">-</span></div>
             </div>
 
-            <div class="current-seq">
-                Last Sequence: <span id="seqDisplay" style="color: var(--primary); font-weight: bold;">NONE</span>
+            <div class="sequence-info">
+                Last Sequence: <span id="seqText" style="color:white; font-weight:bold;">---</span>
             </div>
         </div>
 
         <div class="input-group">
-            <input type="text" id="bulk" class="bulk-input" placeholder="Paste history (e.g. 5, 18, 32...)">
-            <button id="loadBtn" class="btn btn-load">Load</button>
-            <button id="clearBtn" class="btn btn-clear">CLR</button>
+            <input type="text" id="bulk" class="bulk-input" placeholder="Paste: 1, 23, 14, 0...">
+            <button id="loadBtn" class="btn btn-load">LOAD</button>
+            <button id="clrBtn" class="btn btn-clr">CLR</button>
         </div>
 
-        <div class="number-pad" id="pad"></div>
+        <div class="numpad" id="numpad"></div>
 
-        <div class="history-tray">
-            <span class="history-title">Recent Number Flow</span>
-            <div class="history-items" id="historyList"></div>
-        </div>
-
-        <div class="ds-info">
-            DS1(1-6) DS2(7-12) DS3(13-18) DS4(19-24) DS5(25-30) DS6(31-36)
+        <div class="history-list" id="history"></div>
+        
+        <div style="font-size: 0.65rem; color: #484f58; margin-top: 15px; text-align: center;">
+            Rule: Finds last match of 3-sequence, then extracts the next 3 unique Double Streets.
         </div>
     </div>
 
@@ -268,17 +142,16 @@
         let history = [];
 
         function getDS(n) {
-            if (n === 0) return 0; // Zero is tracked as DS 0
+            if (n === 0) return 0;
             return Math.ceil(n / 6);
         }
 
-        function init() {
-            const pad = document.getElementById('pad');
-            const zero = document.createElement('button');
-            zero.className = 'num-btn zero'; zero.textContent = '0';
-            zero.onclick = () => addNum(0);
-            pad.appendChild(zero);
-
+        function initPad() {
+            const pad = document.getElementById('numpad');
+            const z = document.createElement('button');
+            z.className = 'num-btn zero'; z.textContent = '0';
+            z.onclick = () => addNum(0);
+            pad.appendChild(z);
             for(let i=1; i<=36; i++) {
                 const b = document.createElement('button');
                 b.className = 'num-btn'; b.textContent = i;
@@ -289,63 +162,73 @@
 
         function addNum(n) {
             history.push(n);
-            analyze();
+            process();
         }
 
-        function analyze() {
-            // Update History View
-            const hList = document.getElementById('historyList');
-            hList.innerHTML = history.slice(-15).map(n => `<div class="h-tag">${n}</div>`).join('');
+        function process() {
+            const histDiv = document.getElementById('history');
+            histDiv.innerHTML = history.slice(-20).map(n => `<span class="h-item">${n}</span>`).join('');
 
             if (history.length < 3) return;
 
             const dsHistory = history.map(getDS);
             const last3 = dsHistory.slice(-3);
-            document.getElementById('seqDisplay').textContent = last3.join(' → ');
+            document.getElementById('seqText').textContent = last3.join(' → ');
 
-            let predictions = [null, null, null];
-            let found = false;
+            let foundUnique = [];
+            let matchFound = false;
 
-            // Search history (excluding the current tail) for the last occurrence of this 3-DS sequence
-            // Searching backwards ensures we get the LATEST behavior
+            // Search history backwards for the latest 3-pattern match
+            // We start searching at index history.length - 4 (the item just before our current sequence)
             for (let i = dsHistory.length - 4; i >= 0; i--) {
                 if (dsHistory[i] === last3[0] && 
                     dsHistory[i+1] === last3[1] && 
                     dsHistory[i+2] === last3[2]) {
                     
-                    // Match found! Look for up to 3 following results
-                    if (i + 3 < dsHistory.length - 3) {
-                        predictions[0] = dsHistory[i+3];
-                        found = true;
+                    // Match found! Now scan forward from this point for 3 UNIQUE Double Streets
+                    // Note: We scan from 'i + 3' (the very first DS after the match)
+                    // But we must stop before the current actual sequence (dsHistory.length - 3)
+                    for (let j = i + 3; j < dsHistory.length - 3; j++) {
+                        let currentVal = dsHistory[j];
+                        if (!foundUnique.includes(currentVal)) {
+                            foundUnique.push(currentVal);
+                        }
+                        if (foundUnique.length === 3) break;
                     }
-                    if (i + 4 < dsHistory.length - 3) predictions[1] = dsHistory[i+4];
-                    if (i + 5 < dsHistory.length - 3) predictions[2] = dsHistory[i+5];
                     
-                    if (found) break; 
+                    if (foundUnique.length > 0) {
+                        matchFound = true;
+                        break; // We found the most recent occurrence with data
+                    }
                 }
             }
 
-            updateUI(found, predictions);
+            render(matchFound, foundUnique);
         }
 
-        function updateUI(found, preds) {
+        function render(isMatch, data) {
             const status = document.getElementById('status');
-            const vals = [document.getElementById('v1'), document.getElementById('v2'), document.getElementById('v3')];
-            const boxes = [document.getElementById('b1'), document.getElementById('b2'), document.getElementById('b3')];
-
-            if (found) {
-                status.textContent = "MATCH DETECTED";
-                status.classList.add('active');
-                preds.forEach((p, i) => {
-                    vals[i].textContent = p !== null ? p : '?';
-                    boxes[i].classList.remove('empty');
+            const boxes = [document.getElementById('p1'), document.getElementById('p2'), document.getElementById('p3')];
+            
+            if (isMatch) {
+                status.textContent = "MATCH FOUND";
+                status.className = "status-pill match";
+                boxes.forEach((box, i) => {
+                    const valSpan = box.querySelector('.val');
+                    if (data[i] !== undefined) {
+                        valSpan.textContent = data[i];
+                        box.classList.add('active');
+                    } else {
+                        valSpan.textContent = "?"; // Found a match but not enough unique data followed it
+                        box.classList.remove('active');
+                    }
                 });
             } else {
-                status.textContent = history.length < 3 ? "WAITING FOR 3 NUMBERS..." : "NO PATTERN MATCHED";
-                status.classList.remove('active');
-                preds.forEach((_, i) => {
-                    vals[i].textContent = '-';
-                    boxes[i].classList.add('empty');
+                status.textContent = "SEARCHING PATTERN...";
+                status.className = "status-pill";
+                boxes.forEach(box => {
+                    box.querySelector('.val').textContent = "-";
+                    box.classList.remove('active');
                 });
             }
         }
@@ -354,17 +237,17 @@
             const raw = document.getElementById('bulk').value;
             const nums = raw.split(/[ ,]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n>=0 && n<=36);
             history = [...history, ...nums];
-            analyze();
+            process();
             document.getElementById('bulk').value = '';
         };
 
-        document.getElementById('clearBtn').onclick = () => {
+        document.getElementById('clrBtn').onclick = () => {
             history = [];
-            document.getElementById('seqDisplay').textContent = "NONE";
-            analyze();
+            document.getElementById('seqText').textContent = "---";
+            process();
         };
 
-        window.onload = init;
+        window.onload = initPad;
     </script>
 </body>
 </html>
