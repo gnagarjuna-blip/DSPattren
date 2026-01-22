@@ -22,7 +22,6 @@
         header { text-align: center; margin-bottom: 20px; }
         h1 { color: var(--primary); font-size: 1.5rem; letter-spacing: 1px; }
 
-        /* Prediction Area */
         .engine-card {
             background: var(--card);
             border: 1px solid #30363d;
@@ -65,7 +64,6 @@
         }
 
         .pred-box.active { border-color: var(--primary); background: rgba(88, 166, 255, 0.05); }
-
         .pred-box .val { font-size: 2rem; font-weight: 800; color: white; display: block; }
         .pred-box .label { font-size: 0.6rem; color: #8b949e; text-transform: uppercase; }
 
@@ -76,7 +74,6 @@
             border-top: 1px solid #30363d;
         }
 
-        /* Controls */
         .input-group { display: flex; gap: 8px; margin-bottom: 15px; }
         .bulk-input { 
             flex: 1; background: #0d1117; border: 1px solid #30363d; 
@@ -124,17 +121,16 @@
         </div>
 
         <div class="input-group">
-            <input type="text" id="bulk" class="bulk-input" placeholder="Paste: 1, 23, 14, 0...">
+            <input type="text" id="bulk" class="bulk-input" placeholder="Paste numbers here...">
             <button id="loadBtn" class="btn btn-load">LOAD</button>
             <button id="clrBtn" class="btn btn-clr">CLR</button>
         </div>
 
         <div class="numpad" id="numpad"></div>
-
         <div class="history-list" id="history"></div>
         
         <div style="font-size: 0.65rem; color: #484f58; margin-top: 15px; text-align: center;">
-            Rule: Finds last match of 3-sequence, then extracts the next 3 unique Double Streets.
+            Rule: Matches current 3-DS pattern against history and extracts the next 3 unique DS results.
         </div>
     </div>
 
@@ -169,7 +165,7 @@
             const histDiv = document.getElementById('history');
             histDiv.innerHTML = history.slice(-20).map(n => `<span class="h-item">${n}</span>`).join('');
 
-            if (history.length < 3) return;
+            if (history.length < 4) return; // Need at least 3 for pattern + 1 for result
 
             const dsHistory = history.map(getDS);
             const last3 = dsHistory.slice(-3);
@@ -178,27 +174,30 @@
             let foundUnique = [];
             let matchFound = false;
 
-            // Search history backwards for the latest 3-pattern match
-            // We start searching at index history.length - 4 (the item just before our current sequence)
+            // Search history backwards
+            // Start searching before the current sequence (history.length - 4)
             for (let i = dsHistory.length - 4; i >= 0; i--) {
+                // Check if 3-pattern matches
                 if (dsHistory[i] === last3[0] && 
                     dsHistory[i+1] === last3[1] && 
                     dsHistory[i+2] === last3[2]) {
                     
-                    // Match found! Now scan forward from this point for 3 UNIQUE Double Streets
-                    // Note: We scan from 'i + 3' (the very first DS after the match)
-                    // But we must stop before the current actual sequence (dsHistory.length - 3)
+                    // Pattern Matched!
+                    // Now find the NEXT 3 UNIQUE DS values after this pattern
+                    let tempUnique = [];
                     for (let j = i + 3; j < dsHistory.length - 3; j++) {
-                        let currentVal = dsHistory[j];
-                        if (!foundUnique.includes(currentVal)) {
-                            foundUnique.push(currentVal);
+                        let val = dsHistory[j];
+                        if (!tempUnique.includes(val)) {
+                            tempUnique.push(val);
                         }
-                        if (foundUnique.length === 3) break;
+                        if (tempUnique.length === 3) break;
                     }
-                    
-                    if (foundUnique.length > 0) {
+
+                    // If we found any unique values after the match, use them
+                    if (tempUnique.length > 0) {
+                        foundUnique = tempUnique;
                         matchFound = true;
-                        break; // We found the most recent occurrence with data
+                        break; 
                     }
                 }
             }
@@ -219,7 +218,7 @@
                         valSpan.textContent = data[i];
                         box.classList.add('active');
                     } else {
-                        valSpan.textContent = "?"; // Found a match but not enough unique data followed it
+                        valSpan.textContent = "?"; 
                         box.classList.remove('active');
                     }
                 });
