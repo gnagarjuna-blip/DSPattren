@@ -3,125 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DS Exact History Matcher</title>
+    <title>Precise DS Engine - Safe Mode</title>
     <style>
         :root {
             --bg: #0d1117;
             --card: #161b22;
             --primary: #58a6ff;
             --accent: #7ee787;
-            --warning: #d29922;
             --danger: #f85149;
             --text: #c9d1d9;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 15px; }
-        .container { max-width: 500px; margin: 0 auto; }
-
-        header { text-align: center; margin-bottom: 20px; }
-        h1 { color: var(--primary); font-size: 1.5rem; letter-spacing: 1px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 450px; }
 
         .engine-card {
             background: var(--card);
             border: 1px solid #30363d;
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 20px;
-            margin-bottom: 20px;
             text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .status-pill {
             display: inline-block;
-            padding: 5px 15px;
+            padding: 6px 12px;
             border-radius: 20px;
             font-size: 0.7rem;
             font-weight: bold;
-            text-transform: uppercase;
             background: #21262d;
             border: 1px solid #30363d;
             margin-bottom: 15px;
+            color: var(--primary);
         }
 
-        .status-pill.match {
-            color: var(--accent);
-            border-color: var(--accent);
-            box-shadow: 0 0 10px rgba(126, 231, 135, 0.2);
+        .safe-indicator {
+            font-size: 0.65rem;
+            margin-bottom: 15px;
+            font-weight: bold;
         }
 
         .prediction-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         .pred-box {
             background: #0d1117;
             border: 2px solid #30363d;
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 15px 5px;
+            transition: 0.3s;
         }
 
-        .pred-box.active { border-color: var(--accent); background: rgba(126, 231, 135, 0.05); }
-        .pred-box .val { font-size: 2rem; font-weight: 800; color: white; display: block; }
+        .pred-box.active { border-color: var(--accent); background: rgba(126, 231, 135, 0.1); }
+        .pred-box .val { font-size: 2.2rem; font-weight: 800; color: #fff; display: block; }
         .pred-box .label { font-size: 0.6rem; color: #8b949e; text-transform: uppercase; }
 
-        .sequence-info {
-            font-size: 0.8rem;
-            color: #8b949e;
-            padding-top: 10px;
-            border-top: 1px solid #30363d;
-        }
-
-        .input-group { display: flex; gap: 8px; margin-bottom: 15px; }
-        .bulk-input { 
-            flex: 1; background: #0d1117; border: 1px solid #30363d; 
-            border-radius: 6px; padding: 10px; color: white; 
-        }
+        .input-group { display: flex; gap: 8px; margin: 20px 0; }
+        .bulk-input { flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 12px; color: white; }
         
-        .btn { padding: 10px 15px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
+        .btn { padding: 12px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
         .btn-load { background: var(--primary); color: #0d1117; }
-        .btn-clr { background: var(--danger); color: white; }
+        .btn-clr { background: var(--danger); color: white; margin-left: 5px; }
 
-        .numpad {
-            display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
-            background: var(--card); padding: 10px; border-radius: 12px;
-        }
-        .num-btn {
-            aspect-ratio: 1; background: #21262d; border: 1px solid #30363d;
-            color: white; font-weight: bold; border-radius: 4px; cursor: pointer;
-        }
-        .num-btn.zero { background: #238636; }
+        .numpad { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+        .num-btn { aspect-ratio: 1; background: #21262d; border: 1px solid #30363d; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; }
         .num-btn:active { background: var(--primary); }
 
-        .history-list {
-            margin-top: 15px; display: flex; flex-wrap: wrap; gap: 5px;
-            max-height: 80px; overflow-y: auto;
-        }
-        .h-item { background: #30363d; padding: 2px 8px; border-radius: 3px; font-size: 0.8rem; }
+        .history-list { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 6px; }
+        .h-item { background: #30363d; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
     <div class="container">
-        <header><h1>DS EXACT MATCHER</h1></header>
-
         <div class="engine-card">
-            <div id="status" class="status-pill">Wait for 3+ Spins</div>
+            <div id="status" class="status-pill">AWAITING DATA</div>
             
+            <div id="safeStatus" class="safe-indicator" style="color: #8b949e;">SAFE MODE: ACTIVE (REQ. 2 MATCHES)</div>
+
             <div class="prediction-row">
-                <div class="pred-box" id="p1"><span class="label">Next DS 1</span><span class="val">-</span></div>
-                <div class="pred-box" id="p2"><span class="label">Next DS 2</span><span class="val">-</span></div>
-                <div class="pred-box" id="p3"><span class="label">Next DS 3</span><span class="val">-</span></div>
+                <div class="pred-box" id="p1"><span class="label">DS 1</span><span class="val">-</span></div>
+                <div class="pred-box" id="p2"><span class="label">DS 2</span><span class="val">-</span></div>
+                <div class="pred-box" id="p3"><span class="label">DS 3</span><span class="val">-</span></div>
             </div>
 
-            <div class="sequence-info">
-                Current Pattern: <span id="seqText" style="color:white; font-weight:bold;">---</span>
+            <div style="font-size:0.8rem; border-top:1px solid #333; padding-top:10px;">
+                Pattern: <span id="seqText" style="color:var(--accent)">---</span> | Matches Found: <span id="matchCount" style="color:white">0</span>
             </div>
         </div>
 
         <div class="input-group">
-            <input type="text" id="bulk" class="bulk-input" placeholder="Paste numbers...">
+            <input type="text" id="bulk" class="bulk-input" placeholder="Paste history here...">
             <button id="loadBtn" class="btn btn-load">LOAD</button>
             <button id="clrBtn" class="btn btn-clr">CLR</button>
         </div>
@@ -133,107 +110,92 @@
     <script>
         let history = [];
 
-        function getDS(n) {
-            if (n === 0) return 0;
-            return Math.ceil(n / 6);
-        }
+        function getDS(n) { return n === 0 ? 0 : Math.ceil(n / 6); }
 
         function initPad() {
             const pad = document.getElementById('numpad');
-            const z = document.createElement('button');
-            z.className = 'num-btn zero'; z.textContent = '0';
-            z.onclick = () => addNum(0);
-            pad.appendChild(z);
-            for(let i=1; i<=36; i++) {
+            for(let i=0; i<=36; i++) {
                 const b = document.createElement('button');
                 b.className = 'num-btn'; b.textContent = i;
-                b.onclick = () => addNum(i);
+                b.onclick = () => { history.push(i); process(); };
                 pad.appendChild(b);
             }
         }
 
-        function addNum(n) {
-            history.push(n);
-            process();
-        }
-
         function process() {
             const histDiv = document.getElementById('history');
-            histDiv.innerHTML = history.slice(-20).map(n => `<span class="h-item">${n}</span>`).join('');
+            histDiv.innerHTML = history.slice(-15).map(n => `<span class="h-item">${n}</span>`).join('');
 
             if (history.length < 4) return;
 
             const dsHistory = history.map(getDS);
-            const last3 = dsHistory.slice(-3);
-            document.getElementById('seqText').textContent = last3.join(' → ');
+            const pattern = dsHistory.slice(-3); 
+            document.getElementById('seqText').textContent = pattern.join('→');
 
-            let resultDS = [];
-            let matchFound = false;
+            let frequencyMap = {};
+            let totalPatternMatches = 0;
 
-            // Search history backwards to find the LATEST exact match of the pattern
-            // Start searching at (length - 4) so we don't match the current live sequence itself
-            for (let i = dsHistory.length - 4; i >= 0; i--) {
-                if (dsHistory[i] === last3[0] && 
-                    dsHistory[i+1] === last3[1] && 
-                    dsHistory[i+2] === last3[2]) {
+            // SCAN ENTIRE HISTORY
+            // We search until length - 4 to ensure there is a number after the pattern to record
+            for (let i = 0; i <= dsHistory.length - 4; i++) {
+                if (dsHistory[i] === pattern[0] && 
+                    dsHistory[i+1] === pattern[1] && 
+                    dsHistory[i+2] === pattern[2]) {
                     
-                    matchFound = true;
+                    totalPatternMatches++;
                     
-                    // Match found! Now look at the results that followed it
-                    // Start from the very first DS after the pattern (i + 3)
-                    // We look through all historical data up to the current sequence
-                    for (let j = i + 3; j < dsHistory.length - 3; j++) {
-                        let candidate = dsHistory[j];
-                        
-                        // Rule: Add only if it's unique (not already in our 3 results)
-                        if (!resultDS.includes(candidate)) {
-                            resultDS.push(candidate);
-                        }
-                        
-                        // Stop immediately when we have exactly 3 unique results
-                        if (resultDS.length === 3) break;
-                    }
-                    
-                    // If this latest match didn't have 3 unique results after it,
-                    // you might want to keep searching for an older match.
-                    // But as per your request, we stop at the latest match.
-                    break; 
+                    // Grab the next DS result
+                    let result = dsHistory[i+3];
+                    frequencyMap[result] = (frequencyMap[result] || 0) + 1;
                 }
             }
 
-            render(matchFound, resultDS);
+            document.getElementById('matchCount').textContent = totalPatternMatches;
+
+            // SAFE MODE LOGIC: Check if total matches >= 2
+            if (totalPatternMatches >= 2) {
+                let sorted = Object.keys(frequencyMap)
+                    .sort((a, b) => frequencyMap[b] - frequencyMap[a])
+                    .slice(0, 3);
+                updateUI(true, sorted);
+            } else {
+                updateUI(false, []);
+            }
         }
 
-        function render(isMatch, data) {
+        function updateUI(isSafe, data) {
             const status = document.getElementById('status');
+            const safeStatus = document.getElementById('safeStatus');
             const boxes = [document.getElementById('p1'), document.getElementById('p2'), document.getElementById('p3')];
             
-            if (isMatch) {
-                status.textContent = "HISTORICAL MATCH FOUND";
-                status.className = "status-pill match";
+            if (isSafe && data.length > 0) {
+                status.textContent = "SAFE MATCH FOUND";
+                status.style.color = "var(--accent)";
+                safeStatus.textContent = "SAFE MODE: SIGNAL STABLE";
+                safeStatus.style.color = "var(--accent)";
+                
                 boxes.forEach((box, i) => {
                     const valSpan = box.querySelector('.val');
                     if (data[i] !== undefined) {
                         valSpan.textContent = data[i];
                         box.classList.add('active');
                     } else {
-                        valSpan.textContent = "?"; // Shown if match has < 3 unique following results
+                        valSpan.textContent = "?";
                         box.classList.remove('active');
                     }
                 });
             } else {
-                status.textContent = "SEARCHING HISTORY...";
-                status.className = "status-pill";
-                boxes.forEach(box => {
-                    box.querySelector('.val').textContent = "-";
-                    box.classList.remove('active');
-                });
+                status.textContent = isSafe ? "NO DATA AFTER MATCH" : "INSUFFICIENT DATA";
+                status.style.color = "var(--primary)";
+                safeStatus.textContent = isSafe ? "WAITING FOR DATA" : "SAFE MODE: WAITING FOR 2nd MATCH";
+                safeStatus.style.color = "var(--danger)";
+                boxes.forEach(b => { b.querySelector('.val').textContent = "-"; b.classList.remove('active'); });
             }
         }
 
         document.getElementById('loadBtn').onclick = () => {
             const raw = document.getElementById('bulk').value;
-            const nums = raw.split(/[ ,]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n>=0 && n<=36);
+            const nums = raw.split(/[ ,]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
             history = [...history, ...nums];
             process();
             document.getElementById('bulk').value = '';
@@ -242,6 +204,7 @@
         document.getElementById('clrBtn').onclick = () => {
             history = [];
             document.getElementById('seqText').textContent = "---";
+            document.getElementById('matchCount').textContent = "0";
             process();
         };
 
