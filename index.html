@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DS Pattern Frequency Tracker</title>
+    <title>DS Sequential Pattern Tracker</title>
     <style>
         :root {
             --bg: #0d1117;
@@ -61,7 +61,6 @@
             border: 2px solid #30363d;
             border-radius: 10px;
             padding: 15px 5px;
-            transition: all 0.3s ease;
         }
 
         .pred-box.active { border-color: var(--primary); background: rgba(88, 166, 255, 0.05); }
@@ -105,24 +104,24 @@
 </head>
 <body>
     <div class="container">
-        <header><h1>DS ANALYTICS ENGINE</h1></header>
+        <header><h1>DS SEQUENCE ENGINE</h1></header>
 
         <div class="engine-card">
-            <div id="status" class="status-pill">Awaiting Data</div>
+            <div id="status" class="status-pill">Awaiting 3+ Spins</div>
             
             <div class="prediction-row">
-                <div class="pred-box" id="p1"><span class="label">Top 1</span><span class="val">-</span></div>
-                <div class="pred-box" id="p2"><span class="label">Top 2</span><span class="val">-</span></div>
-                <div class="pred-box" id="p3"><span class="label">Top 3</span><span class="val">-</span></div>
+                <div class="pred-box" id="p1"><span class="label">DS 1</span><span class="val">-</span></div>
+                <div class="pred-box" id="p2"><span class="label">DS 2</span><span class="val">-</span></div>
+                <div class="pred-box" id="p3"><span class="label">DS 3</span><span class="val">-</span></div>
             </div>
 
             <div class="sequence-info">
-                Target Pattern: <span id="seqText" style="color:white; font-weight:bold;">---</span>
+                Last Pattern: <span id="seqText" style="color:white; font-weight:bold;">---</span>
             </div>
         </div>
 
         <div class="input-group">
-            <input type="text" id="bulk" class="bulk-input" placeholder="1, 23, 14, 0...">
+            <input type="text" id="bulk" class="bulk-input" placeholder="Paste: 1, 23, 14...">
             <button id="loadBtn" class="btn btn-load">LOAD</button>
             <button id="clrBtn" class="btn btn-clr">CLR</button>
         </div>
@@ -131,7 +130,7 @@
         <div class="history-list" id="history"></div>
         
         <div style="font-size: 0.65rem; color: #484f58; margin-top: 15px; text-align: center;">
-            Algorithm: Scans entire history for pattern and returns the 3 most frequent following Double Streets.
+            Rule: Finds last match of pattern and extracts the NEXT 3 unique Double Streets.
         </div>
     </div>
 
@@ -166,50 +165,53 @@
             const histDiv = document.getElementById('history');
             histDiv.innerHTML = history.slice(-20).map(n => `<span class="h-item">${n}</span>`).join('');
 
-            if (history.length < 4) return; 
+            if (history.length < 4) return;
 
             const dsHistory = history.map(getDS);
             const last3 = dsHistory.slice(-3);
             document.getElementById('seqText').textContent = last3.join(' → ');
 
-            // Map to store frequency of Double Streets following the pattern
-            let frequencyMap = {};
-            let occurrencesFound = false;
+            let finalUnique = [];
+            let matchFound = false;
 
-            // Search ENTIRE history
-            // We stop at length - 3 because we need at least one result AFTER the pattern
-            for (let i = 0; i <= dsHistory.length - 4; i++) {
+            // Search history backwards to find the LATEST occurrence
+            // We start searching at index history.length - 4 (before current pattern)
+            for (let i = dsHistory.length - 4; i >= 0; i--) {
                 if (dsHistory[i] === last3[0] && 
                     dsHistory[i+1] === last3[1] && 
                     dsHistory[i+2] === last3[2]) {
                     
-                    occurrencesFound = true;
-                    // Pattern matched! Look at the Double Streets that followed this specific instance
-                    // We collect all DS until we hit the current "live" pattern
+                    // Match found! 
+                    let tempUnique = [];
+                    // Scan forward from i+3 to grab NEXT numbers until we have 3 unique DS
+                    // We can scan up to the current live data start
                     for (let j = i + 3; j < dsHistory.length - 3; j++) {
-                        let nextDS = dsHistory[j];
-                        frequencyMap[nextDS] = (frequencyMap[nextDS] || 0) + 1;
+                        let val = dsHistory[j];
+                        if (!tempUnique.includes(val)) {
+                            tempUnique.push(val);
+                        }
+                        if (tempUnique.length === 3) break;
+                    }
+
+                    // Once we find a match that provides unique data, we stop searching
+                    if (tempUnique.length > 0) {
+                        finalUnique = tempUnique;
+                        matchFound = true;
+                        break; 
                     }
                 }
             }
 
-            // Convert map to array and sort by frequency (Highest first)
-            let sortedResults = Object.keys(frequencyMap)
-                .map(ds => ({ ds: ds, count: frequencyMap[ds] }))
-                .sort((a, b) => b.count - a.count)
-                .map(item => item.ds);
-
-            render(occurrencesFound, sortedResults);
+            render(matchFound, finalUnique);
         }
 
         function render(isMatch, data) {
             const status = document.getElementById('status');
             const boxes = [document.getElementById('p1'), document.getElementById('p2'), document.getElementById('p3')];
             
-            if (isMatch && data.length > 0) {
-                status.textContent = "ANALYSIS COMPLETE";
+            if (isMatch) {
+                status.textContent = "MATCH FOUND";
                 status.className = "status-pill match";
-                
                 boxes.forEach((box, i) => {
                     const valSpan = box.querySelector('.val');
                     if (data[i] !== undefined) {
@@ -221,7 +223,7 @@
                     }
                 });
             } else {
-                status.textContent = "NO HISTORICAL PATTERN";
+                status.textContent = "SEARCHING PATTERN...";
                 status.className = "status-pill";
                 boxes.forEach(box => {
                     box.querySelector('.val').textContent = "-";
